@@ -12,8 +12,10 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, } from 
 import { Input } from '@/components/ui/input';
 import { Link } from 'react-router';
 import { Button } from '@/components/ui/button';
+import { useSignUpMutation } from '@/hooks/use-auth';
+import { toast } from 'sonner';
 
-type SignUpFormData = z.infer<typeof SignUpSchema>;
+export type SignUpFormData = z.infer<typeof SignUpSchema>;
 
 const SignUp = () => {
 
@@ -27,8 +29,21 @@ const SignUp = () => {
     },
   });
 
+  // Step 29 - use the useSignUpMutation hook to handle the sign-up API request and manage the loading state and error handling for the sign-up process
+  const { mutate, isPending } = useSignUpMutation();
+  // step 29 ended
+
   const handleOnSubmit = (values: SignUpFormData) => {
-    console.log(values);
+    mutate(values,{
+      onSuccess: () => {
+        toast.success("Account created successfully! Please sign in.");
+      },
+      onError: (error) => {
+        toast.error("Failed to create account. Please try again.");
+        console.error("Sign-up error:", error);
+      }
+
+    });
   }
 
   return (
@@ -114,13 +129,9 @@ const SignUp = () => {
                 )}
               />
 
-              {/* <Button type="submit" className="w-full" disabled={isPending}>
+              <Button type="submit" className="w-full" disabled={isPending}>
                 {isPending ? "Signing up..." : "Sign up"}
-              </Button> */}
-              <Button type="submit" className="w-full">
-                Sign up
               </Button>
-
 
             </form>
           </Form>

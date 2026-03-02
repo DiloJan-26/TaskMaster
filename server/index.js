@@ -46,8 +46,20 @@ app.use("/api-v1", routes);
 
 //error middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: "Internal server error!" });
+  console.error("Error details:", err); // Log full error object
+  
+  // Handle Zod validation errors from zod-express-middleware
+  if (err.name === 'ZodError' || err.issues) {
+    return res.status(400).json({ 
+      message: "Validation error",
+      errors: err.issues || err.errors 
+    });
+  }
+  
+  // Handle other errors
+  res.status(err.status || 500).json({ 
+    message: err.message || "Internal server error!" 
+  });
 });
 
 // not found middleware
