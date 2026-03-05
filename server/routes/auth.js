@@ -28,14 +28,15 @@ router.post(
   validateRequest({
     body: registerSchema,
   }),
-  registerUser
+  registerUser,
 );
+
 router.post(
   "/login",
   validateRequest({
     body: loginSchema,
   }),
-  loginUser
+  loginUser,
 );
 
 router.post(
@@ -43,7 +44,7 @@ router.post(
   validateRequest({
     body: verifyEmailSchema,
   }),
-  verifyEmail
+  verifyEmail,
 );
 
 router.post(
@@ -51,7 +52,7 @@ router.post(
   validateRequest({
     body: emailSchema,
   }),
-  resetPasswordRequest
+  resetPasswordRequest,
 );
 
 router.post(
@@ -59,7 +60,7 @@ router.post(
   validateRequest({
     body: resetPasswordSchema,
   }),
-  verifyResetPasswordTokenAndResetPassword
+  verifyResetPasswordTokenAndResetPassword,
 );
 
 export default router;
