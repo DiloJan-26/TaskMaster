@@ -8,11 +8,13 @@
     "dev": "nodemon index.js",
     "start": "node index.js"
   },
-
   "author": "DJ",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@arcjet/inspect": "^1.1.0",
+    "@arcjet/node": "^1.1.0",
+    "@sendgrid/mail": "^8.1.6",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",

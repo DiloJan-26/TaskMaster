@@ -4,8 +4,8 @@
 import express from "express";
 import {z} from "zod";
 import { validateRequest } from "zod-express-middleware";
-import { registerSchema } from "../libs/validate-schema.js";
-import { registerUser } from "../controllers/auth-controller.js";
+import { registerSchema, loginSchema } from "../libs/validate-schema.js";
+import { registerUser, loginUser } from "../controllers/auth-controller.js";
 
 const router = express.Router();
 
@@ -19,13 +19,13 @@ router.post(
 
 );
 
-// router.post(
-//   "/login",
-//   validateRequest({
-//     body: loginSchema   // related to step 19
-//   }),
-//   loginUser
+router.post(
+  "/login",
+  validateRequest({
+    body: loginSchema   // related to step 19
+  }),
+  loginUser
 
-// );
+);
 
 export default router;
