@@ -3,9 +3,9 @@
 import { useAuth } from "@/provider/auth-context";
 import React from "react";
 import { Outlet, Navigate } from "react-router";
+import { ThemeProvider } from "@/provider/theme-provider";
 
 const AuthLayout = () => {
-  
   // Step 26 - use the auth context to check if the user is authenticated and redirect to dashboard if they are, otherwise render the outlet for the auth routes
   const { isAuthenticated, isLoading } = useAuth();
 
@@ -16,7 +16,11 @@ const AuthLayout = () => {
     return <Navigate to="/dashboard" />;
   }
   // Step 26 ended
-  return <Outlet />;
+  return (
+    <ThemeProvider>
+      <Outlet />
+    </ThemeProvider>
+  );
 };
 
 export default AuthLayout;
