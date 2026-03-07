@@ -14,7 +14,7 @@ const ReactQueryProvider = ({ children }: { children: React.ReactNode }) => {
     <QueryClientProvider client={queryClient}>
       <AuthProvider> {/* Step 24 - wrap the app with auth provider to provide the auth context to the app */ }
         {children}
-        <Toaster position="top-center" richColors />{" "}
+        <Toaster position="top-center" richColors />
         {/* Step 23 - add the toaster component to show notifications */}
       </AuthProvider>
     </QueryClientProvider>

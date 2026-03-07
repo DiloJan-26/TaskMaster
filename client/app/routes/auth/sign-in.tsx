@@ -1,33 +1,65 @@
 // Step 3 - sign-in.tsx file is created
 // Step 9 - editting happening
 
-import { SignInSchema } from '@/lib/schema';
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Link } from 'react-router';
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { useLoginMutation } from "@/hooks/use-auth";
+import { signInSchema } from "@/lib/schema";
+import { useAuth } from "@/provider/auth-context";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2 } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { Link, useNavigate } from "react-router";
+import { toast } from "sonner";
+import { z } from "zod";
 
-type SignInFormData = z.infer<typeof SignInSchema>;
+type SigninFormData = z.infer<typeof signInSchema>;
 
 const SignIn = () => {
+  const navigate = useNavigate();
+  const { login } = useAuth();
 
-  const form = useForm<SignInFormData>({
-    resolver: zodResolver(SignInSchema),
+  const form = useForm<SigninFormData>({
+    resolver: zodResolver(signInSchema),
     defaultValues: {
-      email: '',
-      password: '',
+      email: "",
+      password: "",
     },
   });
+  const { mutate, isPending } = useLoginMutation();
 
-  const handleOnSubmit = (values: SignInFormData) => {
-    console.log(values);
-  }
-
+  const handleOnSubmit = (values: SigninFormData) => {
+    mutate(values, {
+      onSuccess: (data) => {
+        login(data);
+        console.log(data);
+        toast.success("Login successful");
+        navigate("/dashboard");
+      },
+      onError: (error: any) => {
+        const errorMessage =
+          error.response?.data?.message || "An error occurred";
+        console.log(error);
+        toast.error(errorMessage);
+      },
+    });
+  };
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-muted/40 p-4">
       <Card className="max-w-md w-full shadow-xl">
@@ -69,7 +101,7 @@ const SignIn = () => {
                       <FormLabel>Password</FormLabel>
                       <Link
                         to="/forgot-password"
-                        className="text-sm text-blue-600"
+                        className="text-sm text-primary"
                       >
                         Forgot password?
                       </Link>
@@ -86,14 +118,9 @@ const SignIn = () => {
                 )}
               />
 
-              {/* <Button type="submit" className="w-full" disabled={isPending}>
+              <Button type="submit" className="w-full" disabled={isPending}>
                 {isPending ? <Loader2 className="w-4 h-4 mr-2" /> : "Sign in"}
-              </Button> */}
-              <Button type="submit" className="w-full">
-                Sign in
               </Button>
-
-              
             </form>
           </Form>
 
@@ -107,7 +134,7 @@ const SignIn = () => {
         </CardContent>
       </Card>
     </div>
-  )
-}
+  );
+};
 
-export default SignIn
+export default SignIn;

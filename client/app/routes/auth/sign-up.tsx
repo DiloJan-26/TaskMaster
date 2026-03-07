@@ -2,52 +2,71 @@
 // Step 10 - editting happening
 // Step 11 - After this you stright away going to implement the backend part -> go into backend folder and start working on the auth part
 
-import { SignInSchema, SignUpSchema } from '@/lib/schema';
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Link } from 'react-router';
-import { Button } from '@/components/ui/button';
-import { useSignUpMutation } from '@/hooks/use-auth';
-import { toast } from 'sonner';
+import { signInSchema, signUpSchema } from "@/lib/schema";
+import React from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Link, useNavigate } from "react-router";
+import { useSignUpMutation } from "@/hooks/use-auth";
+import { toast } from "sonner";
 
-export type SignUpFormData = z.infer<typeof SignUpSchema>;
+export type SignupFormData = z.infer<typeof signUpSchema>;
 
 const SignUp = () => {
-
-  const form = useForm<SignUpFormData>({
-    resolver: zodResolver(SignUpSchema),
+  const navigate = useNavigate();
+  const form = useForm<SignupFormData>({
+    resolver: zodResolver(signUpSchema),
     defaultValues: {
-      email: '',
-      password: '',
-      name: '',
-      confirmPassword: '',
+      email: "",
+      password: "",
+      name: "",
+      confirmPassword: "",
     },
   });
 
-  // Step 29 - use the useSignUpMutation hook to handle the sign-up API request and manage the loading state and error handling for the sign-up process
   const { mutate, isPending } = useSignUpMutation();
-  // step 29 ended
 
-  const handleOnSubmit = (values: SignUpFormData) => {
-    mutate(values,{
+  const handleOnSubmit = (values: SignupFormData) => {
+    mutate(values, {
       onSuccess: () => {
-        toast.success("Account created successfully! Please sign in.");
-      },
-      onError: (error) => {
-        toast.error("Failed to create account. Please try again.");
-        console.error("Sign-up error:", error);
-      }
+        toast.success("Email Verification Required", {
+          description:
+            "Please check your email for a verification link. If you don't see it, please check your spam folder.",
+        });
 
+        form.reset();
+        navigate("/sign-in");
+      },
+      onError: (error: any) => {
+        const errorMessage =
+          error.response?.data?.message || "An error occurred";
+        console.log(error);
+        toast.error(errorMessage);
+      },
     });
-  }
+  };
 
   return (
-   <div className="min-h-screen flex flex-col items-center justify-center bg-muted/40 p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-muted/40 p-4">
       <Card className="max-w-md w-full shadow-xl">
         <CardHeader className="text-center mb-5">
           <CardTitle className="text-2xl font-bold">
@@ -132,7 +151,6 @@ const SignUp = () => {
               <Button type="submit" className="w-full" disabled={isPending}>
                 {isPending ? "Signing up..." : "Sign up"}
               </Button>
-
             </form>
           </Form>
 
@@ -146,7 +164,7 @@ const SignUp = () => {
         </CardContent>
       </Card>
     </div>
-  )
-}
+  );
+};
 
-export default SignUp
+export default SignUp;
