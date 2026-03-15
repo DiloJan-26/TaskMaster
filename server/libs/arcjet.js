@@ -7,6 +7,21 @@ import arcjet, {
   validateEmail,
 } from "@arcjet/node";
 
+const resolveArcjetMode = () => {
+  if (process.env.ARCJET_MODE) {
+    return process.env.ARCJET_MODE.toUpperCase();
+  }
+
+  const runtimeEnv =
+    process.env.NODE_ENV?.toLowerCase() ||
+    process.env.ARCJET_ENV?.toLowerCase() ||
+    "development";
+
+  return runtimeEnv === "production" ? "LIVE" : "DRY_RUN";
+};
+
+const mode = resolveArcjetMode();
+
 const aj = arcjet({
   // Get your site key from https://app.arcjet.com and set it as an environment
   // variable rather than hard coding.
@@ -14,10 +29,10 @@ const aj = arcjet({
   characteristics: ["ip.src"], // Track requests by IP
   rules: [
     // Shield protects your app from common attacks e.g. SQL injection
-    shield({ mode: "LIVE" }),
+    shield({ mode }),
     // Create a bot detection rule
     detectBot({
-      mode: "LIVE", // Blocks requests. Use "DRY_RUN" to log only
+      mode, // Blocks requests in LIVE mode. Logs only in DRY_RUN mode
       // Block all bots except the following
       allow: [
         "CATEGORY:SEARCH_ENGINE", // Google, Bing, etc
@@ -28,16 +43,17 @@ const aj = arcjet({
       ],
     }),
     validateEmail({
-      mode: "LIVE", // will block requests. Use "DRY_RUN" to log only
+      mode, // Blocks invalid emails in LIVE mode, logs only in DRY_RUN mode
       // block disposable, invalid, and email addresses with no MX records
       deny: ["DISPOSABLE", "INVALID", "NO_MX_RECORDS"],
     }),
     // Create a token bucket rate limit. Other algorithms are supported.
     tokenBucket({
-      mode: "LIVE",
+      mode,
       refillRate: 5, // Refill 5 tokens per interval
       interval: 10, // Refill every 10 seconds
       capacity: 10, // Bucket capacity of 10 tokens
+      requested: 1, // Each request costs 1 token
     }),
   ],
 });
