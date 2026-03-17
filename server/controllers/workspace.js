@@ -387,7 +387,7 @@ const inviteUserToWorkspace = async (req, res) => {
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
 
-    const invitationLink = `${process.env.FRONTEND_URL}/workspace-invite/${workspace._id}?tk=${inviteToken}`;
+    const invitationLink = `${process.env.CLIENT_URL}/workspace-invite/${workspace._id}?tk=${inviteToken}`;
 
     const emailContent = `
       <p>You have been invited to join ${workspace.name} workspace</p>

@@ -53,7 +53,7 @@ const registerUser = async (req, res) => {
     });
 
     // send email
-    const verificationLink = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+    const verificationLink = `${process.env.CLIENT_URL}/verify-email?token=${verificationToken}`;
     const emailBody = `<p>Click <a href="${verificationLink}">here</a> to verify your email</p>`;
     const emailSubject = "Verify your email";
 
@@ -114,7 +114,7 @@ const loginUser = async (req, res) => {
         });
 
         // send email
-        const verificationLink = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+        const verificationLink = `${process.env.CLIENT_URL}/verify-email?token=${verificationToken}`;
         const emailBody = `<p>Click <a href="${verificationLink}">here</a> to verify your email</p>`;
         const emailSubject = "Verify your email";
 
@@ -258,7 +258,7 @@ const resetPasswordRequest = async (req, res) => {
       expiresAt: new Date(Date.now() + 15 * 60 * 1000),
     });
 
-    const resetPasswordLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetPasswordToken}`;
+    const resetPasswordLink = `${process.env.CLIENT_URL}/reset-password?token=${resetPasswordToken}`;
     const emailBody = `<p>Click <a href="${resetPasswordLink}">here</a> to reset your password</p>`;
     const emailSubject = "Reset your password";
 
