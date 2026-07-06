@@ -65,6 +65,7 @@ export const StatisticsCharts = ({
               config={{
                 completed: { color: "#10b981" }, // green
                 inProgress: { color: "#f59e0b" }, // blue
+                review: { color: "#8b5cf6" }, // purple
                 todo: { color: "#3b82f6" }, // gray
               }}
             >
@@ -97,6 +98,13 @@ export const StatisticsCharts = ({
                   type="monotone"
                   dataKey="inProgress"
                   stroke="#3b82f6"
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="review"
+                  stroke="#8b5cf6"
                   strokeWidth={2}
                   dot={{ r: 4 }}
                 />

@@ -171,7 +171,7 @@ Important components:
 
 - Dashboard components: `StatsCard`, `StatisticsCharts`, `RecentProjects`, `NoWorkspaceSelected`.
 - Workspace components: `CreateWorkspace`, `WorkspaceHeader`, `WorkspaceAvatar`, `ProjectList`, `InviteMember`.
-- Project components: `CreateProject`, `projetc-card.tsx`.
+- Project components: `CreateProject`, `project-card.tsx`.
 - Task components: `CreateTaskDialog`, `TaskTitle`, `TaskDescription`, `TaskStatusSelector`, `TaskPrioritySelector`, `TaskAssigneesSelector`, `SubTasksDetails`, `CommentSection`, `TaskActivity`, `Watchers`.
 - Layout components: `Header`, `SidebarComponent`, `SidebarNav`.
 
@@ -422,10 +422,10 @@ No `.env` files containing real values were printed, modified, or requested.
 
 ### 10. Typo in project card filename
 
-- File path: `client/app/components/project/projetc-card.tsx`
-- Problem: Filename appears to be misspelled as `projetc-card.tsx`.
-- Impact: Low runtime risk, but it can confuse developers and imports during future work.
-- Recommended phase to fix: Phase 1 or later cleanup.
+- File path: `client/app/components/project/project-card.tsx`
+- Problem: Resolved in Phase 1C. The file was previously misspelled as `projetc-card.tsx`.
+- Impact: Low runtime risk, but stale references could confuse developers during future work.
+- Recommended phase to fix: Completed in Phase 1C.
 - Priority: Low.
 
 ### 11. Lack of backend automated tests

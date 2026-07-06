@@ -75,6 +75,7 @@ const MyTasks = () => {
             if (filter === "all") return true;
             if (filter === "todo") return task.status === "To Do";
             if (filter === "inprogress") return task.status === "In Progress";
+            if (filter === "review") return task.status === "Review";
             if (filter === "done") return task.status === "Done";
             if (filter === "achieved") return task.isArchived === true;
             if (filter === "high") return task.priority === "High";
@@ -102,6 +103,7 @@ const MyTasks = () => {
   const inProgressTasks = sortedTasks.filter(
     (task) => task.status === "In Progress"
   );
+  const reviewTasks = sortedTasks.filter((task) => task.status === "Review");
   const doneTasks = sortedTasks.filter((task) => task.status === "Done");
 
   if (isLoading)
@@ -147,6 +149,9 @@ const MyTasks = () => {
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setFilter("inprogress")}>
                 In Progress
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setFilter("review")}>
+                Review
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setFilter("done")}>
                 Done
@@ -265,7 +270,7 @@ const MyTasks = () => {
 
         {/* BOARD VIEW */}
         <TabsContent value="board">
-          <div className="grid grid-cols-1 md:grid-cols-3  gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
@@ -363,6 +368,58 @@ const MyTasks = () => {
                 ))}
 
                 {inProgressTasks?.length === 0 && (
+                  <div className="p-4 text-center text-sm text-muted-foreground">
+                    No tasks found
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  Review
+                  <Badge variant={"outline"}>{reviewTasks?.length}</Badge>
+                </CardTitle>
+              </CardHeader>
+
+              <CardContent className="p-3 space-y-3 max-h-150 overflow-y-auto">
+                {reviewTasks?.map((task) => (
+                  <Card
+                    key={task._id}
+                    className="hover:shadow-md transition-shadow"
+                  >
+                    <Link
+                      to={`/workspaces/${task.project.workspace}/projects/${task.project._id}/tasks/${task._id}`}
+                      className="block"
+                    >
+                      <h3 className="font-medium">{task.title}</h3>
+                      <p className="text-sm text-muted-foreground line-clamp-3">
+                        {task.description || "No description "}
+                      </p>
+
+                      <div className="flex items-center mt-2 gap-2">
+                        <Badge
+                          variant={
+                            task.priority === "High"
+                              ? "destructive"
+                              : "secondary"
+                          }
+                        >
+                          {task.priority}
+                        </Badge>
+
+                        {task.dueDate && (
+                          <span className="text-sm text-muted-foreground">
+                            {format(task.dueDate, "PPPP")}
+                          </span>
+                        )}
+                      </div>
+                    </Link>
+                  </Card>
+                ))}
+
+                {reviewTasks?.length === 0 && (
                   <div className="p-4 text-center text-sm text-muted-foreground">
                     No tasks found
                   </div>

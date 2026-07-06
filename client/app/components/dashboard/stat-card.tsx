@@ -9,7 +9,7 @@ import {
 
 export const StatsCard = ({ data }: { data: StatsCardProps }) => {
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-sm font-medium">Total Projects</CardTitle>
@@ -51,6 +51,17 @@ export const StatsCard = ({ data }: { data: StatsCardProps }) => {
           <div className="text-2xl font-bold">{data.totalTaskInProgress}</div>
           <p className="text-xs text-muted-foreground">
             Tasks currently in progress
+          </p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardTitle className="text-sm font-medium">Review</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{data.totalTaskReview || 0}</div>
+          <p className="text-xs text-muted-foreground">
+            Tasks waiting for review
           </p>
         </CardContent>
       </Card>

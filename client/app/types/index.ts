@@ -50,7 +50,7 @@ export interface Project {
   updatedAt: Date;
   isArchived: boolean;
 }
-export type TaskStatus = "To Do" | "In Progress" | "Done";
+export type TaskStatus = "To Do" | "In Progress" | "Review" | "Done";
 export type TaskPriority = "High" | "Medium" | "Low";
 export enum ProjectMemberRole {
   MANAGER = "manager",
@@ -161,12 +161,14 @@ export interface StatsCardProps {
   totalTaskCompleted: number;
   totalTaskToDo: number;
   totalTaskInProgress: number;
+  totalTaskReview?: number;
 }
 
 export interface TaskTrendsData {
   name: string;
   completed: number;
   inProgress: number;
+  review?: number;
   todo: number;
 }
 

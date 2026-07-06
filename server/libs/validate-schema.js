@@ -2,6 +2,9 @@
 
 import {z} from "zod";
 
+const taskStatusValues = ["To Do", "In Progress", "Review", "Done"];
+const taskPriorityValues = ["Low", "Medium", "High"];
+
 const registerSchema = z.object({
   name: z.string().min(3, "name is required and should be at least 3 characters long"),
   email: z.string().email("Invalid email address"),
@@ -68,13 +71,15 @@ const projectSchema = z.object({
 const taskSchema = z.object({
   title: z.string().min(1, "Task title is required"),
   description: z.string().optional(),
-  status: z.enum(["To Do", "In Progress", "Done"]),
-  priority: z.enum(["Low", "Medium", "High"]),
+  status: z.enum(taskStatusValues),
+  priority: z.enum(taskPriorityValues),
   dueDate: z.string().min(1, "Due date is required"),
   assignees: z.array(z.string()).min(1, "At least one assignee is required"),
 });
 
 export {
+  taskStatusValues,
+  taskPriorityValues,
   registerSchema,
   loginSchema,
   verifyEmailSchema,

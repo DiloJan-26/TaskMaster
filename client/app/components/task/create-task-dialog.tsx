@@ -151,6 +151,7 @@ export const CreateTaskDialog = ({
                                 <SelectItem value="In Progress">
                                   In Progress
                                 </SelectItem>
+                                <SelectItem value="Review">Review</SelectItem>
                                 <SelectItem value="Done">Done</SelectItem>
                               </SelectContent>
                             </FormItem>

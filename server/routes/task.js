@@ -2,7 +2,11 @@ import express from "express";
 
 import { z } from "zod";
 import { validateRequest } from "zod-express-middleware";
-import { taskSchema } from "../libs/validate-schema.js";
+import {
+  taskPriorityValues,
+  taskSchema,
+  taskStatusValues,
+} from "../libs/validate-schema.js";
 import {
   achievedTask,
   addComment,
@@ -109,7 +113,7 @@ router.put(
   authMiddleware,
   validateRequest({
     params: z.object({ taskId: z.string() }),
-    body: z.object({ status: z.string() }),
+    body: z.object({ status: z.enum(taskStatusValues) }),
   }),
   updateTaskStatus
 );
@@ -131,7 +135,7 @@ router.put(
   authMiddleware,
   validateRequest({
     params: z.object({ taskId: z.string() }),
-    body: z.object({ priority: z.string() }),
+    body: z.object({ priority: z.enum(taskPriorityValues) }),
   }),
   updateTaskPriority
 );

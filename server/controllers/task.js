@@ -117,9 +117,10 @@ const updateTaskDescription = async (req, res) => {
     }
 
     const task = access.task;
+    const previousDescription = task.description || "No previous description";
     const oldDescription =
-      (task.description || "").substring(0, 50) +
-      ((task.description || "").length > 50 ? "..." : "");
+      previousDescription.substring(0, 50) +
+      (previousDescription.length > 50 ? "..." : "");
     const newDescription =
       description.substring(0, 50) + (description.length > 50 ? "..." : "");
 

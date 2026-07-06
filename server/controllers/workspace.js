@@ -153,6 +153,10 @@ const getWorkspaceStats = async (req, res) => {
       );
     }, 0);
 
+    const totalTaskReview = projects.reduce((acc, project) => {
+      return acc + project.tasks.filter((task) => task.status === "Review").length;
+    }, 0);
+
     const tasks = projects.flatMap((project) => project.tasks);
 
     // get upcoming task in next 7 days
@@ -167,13 +171,13 @@ const getWorkspaceStats = async (req, res) => {
     });
 
     const taskTrendsData = [
-      { name: "Sun", completed: 0, inProgress: 0, toDo: 0 },
-      { name: "Mon", completed: 0, inProgress: 0, toDo: 0 },
-      { name: "Tue", completed: 0, inProgress: 0, toDo: 0 },
-      { name: "Wed", completed: 0, inProgress: 0, toDo: 0 },
-      { name: "Thu", completed: 0, inProgress: 0, toDo: 0 },
-      { name: "Fri", completed: 0, inProgress: 0, toDo: 0 },
-      { name: "Sat", completed: 0, inProgress: 0, toDo: 0 },
+      { name: "Sun", completed: 0, inProgress: 0, review: 0, toDo: 0 },
+      { name: "Mon", completed: 0, inProgress: 0, review: 0, toDo: 0 },
+      { name: "Tue", completed: 0, inProgress: 0, review: 0, toDo: 0 },
+      { name: "Wed", completed: 0, inProgress: 0, review: 0, toDo: 0 },
+      { name: "Thu", completed: 0, inProgress: 0, review: 0, toDo: 0 },
+      { name: "Fri", completed: 0, inProgress: 0, review: 0, toDo: 0 },
+      { name: "Sat", completed: 0, inProgress: 0, review: 0, toDo: 0 },
     ];
 
     // get last 7 days tasks date
@@ -186,7 +190,7 @@ const getWorkspaceStats = async (req, res) => {
     // populate
 
     for (const project of projects) {
-      for (const task in project.tasks) {
+      for (const task of project.tasks) {
         const taskDate = new Date(task.updatedAt);
 
         const dayInDate = last7Days.findIndex(
@@ -210,6 +214,9 @@ const getWorkspaceStats = async (req, res) => {
                 break;
               case "In Progress":
                 dayData.inProgress++;
+                break;
+              case "Review":
+                dayData.review++;
                 break;
               case "To Do":
                 dayData.toDo++;
@@ -287,6 +294,7 @@ const getWorkspaceStats = async (req, res) => {
       totalTaskCompleted,
       totalTaskToDo,
       totalTaskInProgress,
+      totalTaskReview,
     };
 
     res.status(200).json({

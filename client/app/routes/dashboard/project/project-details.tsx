@@ -94,6 +94,12 @@ const ProjectDetails = () => {
               >
                 In Progress
               </TabsTrigger>
+              <TabsTrigger
+                value="review"
+                onClick={() => setTaskFilter("Review")}
+              >
+                Review
+              </TabsTrigger>
               <TabsTrigger value="done" onClick={() => setTaskFilter("Done")}>
                 Done
               </TabsTrigger>
@@ -110,6 +116,10 @@ const ProjectDetails = () => {
                   In Progress
                 </Badge>
                 <Badge variant="outline" className="bg-background">
+                  {tasks.filter((task) => task.status === "Review").length}{" "}
+                  Review
+                </Badge>
+                <Badge variant="outline" className="bg-background">
                   {tasks.filter((task) => task.status === "Done").length} Done
                 </Badge>
               </div>
@@ -117,7 +127,7 @@ const ProjectDetails = () => {
           </div>
 
           <TabsContent value="all" className="m-0">
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-4 gap-4">
               <TaskColumn
                 title="To Do"
                 tasks={tasks.filter((task) => task.status === "To Do")}
@@ -127,6 +137,12 @@ const ProjectDetails = () => {
               <TaskColumn
                 title="In Progress"
                 tasks={tasks.filter((task) => task.status === "In Progress")}
+                onTaskClick={handleTaskClick}
+              />
+
+              <TaskColumn
+                title="Review"
+                tasks={tasks.filter((task) => task.status === "Review")}
                 onTaskClick={handleTaskClick}
               />
 
@@ -154,6 +170,17 @@ const ProjectDetails = () => {
               <TaskColumn
                 title="In Progress"
                 tasks={tasks.filter((task) => task.status === "In Progress")}
+                onTaskClick={handleTaskClick}
+                isFullWidth
+              />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="review" className="m-0">
+            <div className="grid md:grid-cols-1 gap-4">
+              <TaskColumn
+                title="Review"
+                tasks={tasks.filter((task) => task.status === "Review")}
                 onTaskClick={handleTaskClick}
                 isFullWidth
               />
