@@ -1,9 +1,15 @@
 import { recordActivity } from "../libs/index.js";
 import ActivityLog from "../models/activity.js";
 import Comment from "../models/comment.js";
-import Project from "../models/project.js";
 import Task from "../models/task.js";
-import Workspace from "../models/workspace.js";
+import {
+  canMutateWorkspaceResource,
+  requireActivityResourceAccess,
+  requireProjectAccess,
+  requireTaskAccess,
+  requireTaskMutationAccess,
+  sendAuthError,
+} from "../libs/authorization.js";
 
 const createTask = async (req, res) => {
   try {
@@ -11,29 +17,15 @@ const createTask = async (req, res) => {
     const { title, description, status, priority, dueDate, assignees } =
       req.body;
 
-    const project = await Project.findById(projectId);
+    const access = await requireProjectAccess(projectId, req.user._id);
 
-    if (!project) {
-      return res.status(404).json({
-        message: "Project not found",
-      });
+    if (!access.ok) {
+      return sendAuthError(res, access);
     }
 
-    const workspace = await Workspace.findById(project.workspace);
-
-    if (!workspace) {
-      return res.status(404).json({
-        message: "Workspace not found",
-      });
-    }
-
-    const isMember = workspace.members.some(
-      (member) => member.user.toString() === req.user._id.toString()
-    );
-
-    if (!isMember) {
+    if (!canMutateWorkspaceResource(access.workspace, req.user._id, access.project)) {
       return res.status(403).json({
-        message: "You are not a member of this workspace",
+        message: "You are not authorized to modify this resource",
       });
     }
 
@@ -48,8 +40,8 @@ const createTask = async (req, res) => {
       createdBy: req.user._id,
     });
 
-    project.tasks.push(newTask._id);
-    await project.save();
+    access.project.tasks.push(newTask._id);
+    await access.project.save();
 
     res.status(201).json(newTask);
   } catch (error) {
@@ -64,22 +56,17 @@ const getTaskById = async (req, res) => {
   try {
     const { taskId } = req.params;
 
-    const task = await Task.findById(taskId)
-      .populate("assignees", "name profilePicture")
-      .populate("watchers", "name profilePicture");
+    const access = await requireTaskAccess(taskId, req.user._id);
 
-    if (!task) {
-      return res.status(404).json({
-        message: "Task not found",
-      });
+    if (!access.ok) {
+      return sendAuthError(res, access);
     }
 
-    const project = await Project.findById(task.project).populate(
-      "members.user",
-      "name profilePicture"
-    );
+    await access.task.populate("assignees", "name profilePicture");
+    await access.task.populate("watchers", "name profilePicture");
+    await access.project.populate("members.user", "name profilePicture");
 
-    res.status(200).json({ task, project });
+    res.status(200).json({ task: access.task, project: access.project });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
@@ -93,32 +80,13 @@ const updateTaskTitle = async (req, res) => {
     const { taskId } = req.params;
     const { title } = req.body;
 
-    const task = await Task.findById(taskId);
+    const access = await requireTaskMutationAccess(taskId, req.user._id);
 
-    if (!task) {
-      return res.status(404).json({
-        message: "Task not found",
-      });
+    if (!access.ok) {
+      return sendAuthError(res, access);
     }
 
-    const project = await Project.findById(task.project);
-
-    if (!project) {
-      return res.status(404).json({
-        message: "Project not found",
-      });
-    }
-
-    const isMember = project.members.some(
-      (member) => member.user.toString() === req.user._id.toString()
-    );
-
-    if (!isMember) {
-      return res.status(403).json({
-        message: "You are not a member of this project",
-      });
-    }
-
+    const task = access.task;
     const oldTitle = task.title;
 
     task.title = title;
@@ -142,35 +110,16 @@ const updateTaskDescription = async (req, res) => {
     const { taskId } = req.params;
     const { description } = req.body;
 
-    const task = await Task.findById(taskId);
+    const access = await requireTaskMutationAccess(taskId, req.user._id);
 
-    if (!task) {
-      return res.status(404).json({
-        message: "Task not found",
-      });
+    if (!access.ok) {
+      return sendAuthError(res, access);
     }
 
-    const project = await Project.findById(task.project);
-
-    if (!project) {
-      return res.status(404).json({
-        message: "Project not found",
-      });
-    }
-
-    const isMember = project.members.some(
-      (member) => member.user.toString() === req.user._id.toString()
-    );
-
-    if (!isMember) {
-      return res.status(403).json({
-        message: "You are not a member of this project",
-      });
-    }
-
+    const task = access.task;
     const oldDescription =
-      task.description.substring(0, 50) +
-      (task.description.length > 50 ? "..." : "");
+      (task.description || "").substring(0, 50) +
+      ((task.description || "").length > 50 ? "..." : "");
     const newDescription =
       description.substring(0, 50) + (description.length > 50 ? "..." : "");
 
@@ -196,32 +145,13 @@ const updateTaskStatus = async (req, res) => {
     const { taskId } = req.params;
     const { status } = req.body;
 
-    const task = await Task.findById(taskId);
+    const access = await requireTaskMutationAccess(taskId, req.user._id);
 
-    if (!task) {
-      return res.status(404).json({
-        message: "Task not found",
-      });
+    if (!access.ok) {
+      return sendAuthError(res, access);
     }
 
-    const project = await Project.findById(task.project);
-
-    if (!project) {
-      return res.status(404).json({
-        message: "Project not found",
-      });
-    }
-
-    const isMember = project.members.some(
-      (member) => member.user.toString() === req.user._id.toString()
-    );
-
-    if (!isMember) {
-      return res.status(403).json({
-        message: "You are not a member of this project",
-      });
-    }
-
+    const task = access.task;
     const oldStatus = task.status;
 
     task.status = status;
@@ -245,32 +175,13 @@ const updateTaskAssignees = async (req, res) => {
     const { taskId } = req.params;
     const { assignees } = req.body;
 
-    const task = await Task.findById(taskId);
+    const access = await requireTaskMutationAccess(taskId, req.user._id);
 
-    if (!task) {
-      return res.status(404).json({
-        message: "Task not found",
-      });
+    if (!access.ok) {
+      return sendAuthError(res, access);
     }
 
-    const project = await Project.findById(task.project);
-
-    if (!project) {
-      return res.status(404).json({
-        message: "Project not found",
-      });
-    }
-
-    const isMember = project.members.some(
-      (member) => member.user.toString() === req.user._id.toString()
-    );
-
-    if (!isMember) {
-      return res.status(403).json({
-        message: "You are not a member of this project",
-      });
-    }
-
+    const task = access.task;
     const oldAssignees = task.assignees;
 
     task.assignees = assignees;
@@ -294,32 +205,13 @@ const updateTaskPriority = async (req, res) => {
     const { taskId } = req.params;
     const { priority } = req.body;
 
-    const task = await Task.findById(taskId);
+    const access = await requireTaskMutationAccess(taskId, req.user._id);
 
-    if (!task) {
-      return res.status(404).json({
-        message: "Task not found",
-      });
+    if (!access.ok) {
+      return sendAuthError(res, access);
     }
 
-    const project = await Project.findById(task.project);
-
-    if (!project) {
-      return res.status(404).json({
-        message: "Project not found",
-      });
-    }
-
-    const isMember = project.members.some(
-      (member) => member.user.toString() === req.user._id.toString()
-    );
-
-    if (!isMember) {
-      return res.status(403).json({
-        message: "You are not a member of this project",
-      });
-    }
-
+    const task = access.task;
     const oldPriority = task.priority;
 
     task.priority = priority;
@@ -344,31 +236,13 @@ const addSubTask = async (req, res) => {
     const { taskId } = req.params;
     const { title } = req.body;
 
-    const task = await Task.findById(taskId);
+    const access = await requireTaskMutationAccess(taskId, req.user._id);
 
-    if (!task) {
-      return res.status(404).json({
-        message: "Task not found",
-      });
+    if (!access.ok) {
+      return sendAuthError(res, access);
     }
 
-    const project = await Project.findById(task.project);
-
-    if (!project) {
-      return res.status(404).json({
-        message: "Project not found",
-      });
-    }
-
-    const isMember = project.members.some(
-      (member) => member.user.toString() === req.user._id.toString()
-    );
-
-    if (!isMember) {
-      return res.status(403).json({
-        message: "You are not a member of this project",
-      });
-    }
+    const task = access.task;
 
     const newSubTask = {
       title,
@@ -398,14 +272,13 @@ const updateSubTask = async (req, res) => {
     const { taskId, subTaskId } = req.params;
     const { completed } = req.body;
 
-    const task = await Task.findById(taskId);
+    const access = await requireTaskMutationAccess(taskId, req.user._id);
 
-    if (!task) {
-      return res.status(404).json({
-        message: "Task not found",
-      });
+    if (!access.ok) {
+      return sendAuthError(res, access);
     }
 
+    const task = access.task;
     const subTask = task.subtasks.find(
       (subTask) => subTask._id.toString() === subTaskId
     );
@@ -437,6 +310,12 @@ const getActivityByResourceId = async (req, res) => {
   try {
     const { resourceId } = req.params;
 
+    const access = await requireActivityResourceAccess(resourceId, req.user._id);
+
+    if (!access.ok) {
+      return sendAuthError(res, access);
+    }
+
     const activity = await ActivityLog.find({ resourceId })
       .populate("user", "name profilePicture")
       .sort({ createdAt: -1 });
@@ -453,6 +332,12 @@ const getActivityByResourceId = async (req, res) => {
 const getCommentsByTaskId = async (req, res) => {
   try {
     const { taskId } = req.params;
+
+    const access = await requireTaskAccess(taskId, req.user._id);
+
+    if (!access.ok) {
+      return sendAuthError(res, access);
+    }
 
     const comments = await Comment.find({ task: taskId })
       .populate("author", "name profilePicture")
@@ -472,31 +357,13 @@ const addComment = async (req, res) => {
     const { taskId } = req.params;
     const { text } = req.body;
 
-    const task = await Task.findById(taskId);
+    const access = await requireTaskMutationAccess(taskId, req.user._id);
 
-    if (!task) {
-      return res.status(404).json({
-        message: "Task not found",
-      });
+    if (!access.ok) {
+      return sendAuthError(res, access);
     }
 
-    const project = await Project.findById(task.project);
-
-    if (!project) {
-      return res.status(404).json({
-        message: "Project not found",
-      });
-    }
-
-    const isMember = project.members.some(
-      (member) => member.user.toString() === req.user._id.toString()
-    );
-
-    if (!isMember) {
-      return res.status(403).json({
-        message: "You are not a member of this project",
-      });
-    }
+    const task = access.task;
 
     const newComment = await Comment.create({
       text,
@@ -527,32 +394,13 @@ const watchTask = async (req, res) => {
   try {
     const { taskId } = req.params;
 
-    const task = await Task.findById(taskId);
+    const access = await requireTaskAccess(taskId, req.user._id);
 
-    if (!task) {
-      return res.status(404).json({
-        message: "Task not found",
-      });
+    if (!access.ok) {
+      return sendAuthError(res, access);
     }
 
-    const project = await Project.findById(task.project);
-
-    if (!project) {
-      return res.status(404).json({
-        message: "Project not found",
-      });
-    }
-
-    const isMember = project.members.some(
-      (member) => member.user.toString() === req.user._id.toString()
-    );
-
-    if (!isMember) {
-      return res.status(403).json({
-        message: "You are not a member of this project",
-      });
-    }
-
+    const task = access.task;
     const isWatching = task.watchers.includes(req.user._id);
 
     if (!isWatching) {
@@ -585,31 +433,13 @@ const achievedTask = async (req, res) => {
   try {
     const { taskId } = req.params;
 
-    const task = await Task.findById(taskId);
+    const access = await requireTaskMutationAccess(taskId, req.user._id);
 
-    if (!task) {
-      return res.status(404).json({
-        message: "Task not found",
-      });
+    if (!access.ok) {
+      return sendAuthError(res, access);
     }
 
-    const project = await Project.findById(task.project);
-
-    if (!project) {
-      return res.status(404).json({
-        message: "Project not found",
-      });
-    }
-
-    const isMember = project.members.some(
-      (member) => member.user.toString() === req.user._id.toString()
-    );
-
-    if (!isMember) {
-      return res.status(403).json({
-        message: "You are not a member of this project",
-      });
-    }
+    const task = access.task;
     const isAchieved = task.isArchived;
 
     task.isArchived = !isAchieved;

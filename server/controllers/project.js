@@ -1,6 +1,11 @@
-import Workspace from "../models/workspace.js";
 import Project from "../models/project.js";
 import Task from "../models/task.js";
+import {
+  canMutateWorkspaceResource,
+  requireProjectAccess,
+  requireWorkspaceAccess,
+  sendAuthError,
+} from "../libs/authorization.js";
 
 const createProject = async (req, res) => {
   try {
@@ -8,21 +13,15 @@ const createProject = async (req, res) => {
     const { title, description, status, startDate, dueDate, tags, members } =
       req.body;
 
-    const workspace = await Workspace.findById(workspaceId);
+    const access = await requireWorkspaceAccess(workspaceId, req.user._id);
 
-    if (!workspace) {
-      return res.status(404).json({
-        message: "Workspace not found",
-      });
+    if (!access.ok) {
+      return sendAuthError(res, access);
     }
 
-    const isMember = workspace.members.some(
-      (member) => member.user.toString() === req.user._id.toString()
-    );
-
-    if (!isMember) {
+    if (!canMutateWorkspaceResource(access.workspace, req.user._id)) {
       return res.status(403).json({
-        message: "You are not a member of this workspace",
+        message: "You are not authorized to modify this resource",
       });
     }
 
@@ -40,8 +39,8 @@ const createProject = async (req, res) => {
       createdBy: req.user._id,
     });
 
-    workspace.projects.push(newProject._id);
-    await workspace.save();
+    access.workspace.projects.push(newProject._id);
+    await access.workspace.save();
 
     return res.status(201).json(newProject);
   } catch (error) {
@@ -56,25 +55,13 @@ const getProjectDetails = async (req, res) => {
   try {
     const { projectId } = req.params;
 
-    const project = await Project.findById(projectId);
+    const access = await requireProjectAccess(projectId, req.user._id);
 
-    if (!project) {
-      return res.status(404).json({
-        message: "Project not found",
-      });
+    if (!access.ok) {
+      return sendAuthError(res, access);
     }
 
-    const isMember = project.members.some(
-      (member) => member.user.toString() === req.user._id.toString()
-    );
-
-    if (!isMember) {
-      return res.status(403).json({
-        message: "You are not a member of this project",
-      });
-    }
-
-    res.status(200).json(project);
+    res.status(200).json(access.project);
   } catch (error) {
     console.log(error);
     return res.status(500).json({
@@ -86,23 +73,13 @@ const getProjectDetails = async (req, res) => {
 const getProjectTasks = async (req, res) => {
   try {
     const { projectId } = req.params;
-    const project = await Project.findById(projectId).populate("members.user");
+    const access = await requireProjectAccess(projectId, req.user._id);
 
-    if (!project) {
-      return res.status(404).json({
-        message: "Project not found",
-      });
+    if (!access.ok) {
+      return sendAuthError(res, access);
     }
 
-    const isMember = project.members.some(
-      (member) => member.user._id.toString() === req.user._id.toString()
-    );
-
-    if (!isMember) {
-      return res.status(403).json({
-        message: "You are not a member of this project",
-      });
-    }
+    await access.project.populate("members.user");
 
     const tasks = await Task.find({
       project: projectId,
@@ -112,7 +89,7 @@ const getProjectTasks = async (req, res) => {
       .sort({ createdAt: -1 });
 
     res.status(200).json({
-      project,
+      project: access.project,
       tasks,
     });
   } catch (error) {

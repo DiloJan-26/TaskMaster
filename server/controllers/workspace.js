@@ -6,6 +6,11 @@ import jwt from "jsonwebtoken";
 import { sendEmail } from "../libs/send-email.js";
 import { recordActivity } from "../libs/index.js";
 import { config } from "../config/env.js";
+import {
+  getWorkspaceMemberRole,
+  requireWorkspaceAccess,
+  sendAuthError,
+} from "../libs/authorization.js";
 
 const createWorkspace = async (req, res) => {
   try {
@@ -53,44 +58,43 @@ const getWorkspaceDetails = async (req, res) => {
   try {
     const { workspaceId } = req.params;
 
-    const workspace = await Workspace.findById({
-      _id: workspaceId,
-    }).populate("members.user", "name email profilePicture");
+    const access = await requireWorkspaceAccess(workspaceId, req.user._id);
 
-    if (!workspace) {
-      return res.status(404).json({
-        message: "Workspace not found",
-      });
+    if (!access.ok) {
+      return sendAuthError(res, access);
     }
 
-    res.status(200).json(workspace);
-  } catch (error) {}
+    await access.workspace.populate("members.user", "name email profilePicture");
+
+    res.status(200).json(access.workspace);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      message: "Internal server error",
+    });
+  }
 };
 
 const getWorkspaceProjects = async (req, res) => {
   try {
     const { workspaceId } = req.params;
 
-    const workspace = await Workspace.findOne({
-      _id: workspaceId,
-      "members.user": req.user._id,
-    }).populate("members.user", "name email profilePicture");
+    const access = await requireWorkspaceAccess(workspaceId, req.user._id);
 
-    if (!workspace) {
-      return res.status(404).json({
-        message: "Workspace not found",
-      });
+    if (!access.ok) {
+      return sendAuthError(res, access);
     }
+
+    await access.workspace.populate("members.user", "name email profilePicture");
 
     const projects = await Project.find({
       workspace: workspaceId,
       isArchived: false,
-      members: { $elemMatch: { user: req.user._id } },
     })
       .populate("tasks", "status")
       .sort({ createdAt: -1 });
 
-    res.status(200).json({ projects, workspace });
+    res.status(200).json({ projects, workspace: access.workspace });
   } catch (error) {
     console.log(error);
     res.status(500).json({
@@ -103,22 +107,10 @@ const getWorkspaceStats = async (req, res) => {
   try {
     const { workspaceId } = req.params;
 
-    const workspace = await Workspace.findById(workspaceId);
+    const access = await requireWorkspaceAccess(workspaceId, req.user._id);
 
-    if (!workspace) {
-      return res.status(404).json({
-        message: "Workspace not found",
-      });
-    }
-
-    const isMember = workspace.members.some(
-      (member) => member.user.toString() === req.user._id.toString()
-    );
-
-    if (!isMember) {
-      return res.status(403).json({
-        message: "You are not a member of this workspace",
-      });
+    if (!access.ok) {
+      return sendAuthError(res, access);
     }
 
     const [totalProjects, projects] = await Promise.all([
@@ -327,11 +319,9 @@ const inviteUserToWorkspace = async (req, res) => {
       });
     }
 
-    const userMemberInfo = workspace.members.find(
-      (member) => member.user.toString() === req.user._id.toString()
-    );
+    const userRole = getWorkspaceMemberRole(workspace, req.user._id);
 
-    if (!userMemberInfo || !["admin", "owner"].includes(userMemberInfo.role)) {
+    if (!userRole || !["admin", "owner"].includes(userRole)) {
       return res.status(403).json({
         message: "You are not authorized to invite members to this workspace",
       });
