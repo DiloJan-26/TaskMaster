@@ -1,18 +1,36 @@
-// Step 23 - create send-email.js for handling email sending logic using nodemailer
-
 import sgMail from "@sendgrid/mail";
-import dotenv from "dotenv";
+import { config } from "../config/env.js";
 
-dotenv.config();
+const extractLinks = (html) => {
+  const matches = html.match(/https?:\/\/[^\s"'<>]+/g);
+  return matches || [];
+};
 
-sgMail.setApiKey(process.env.SEND_GRID_API);
-
-const fromEmail = process.env.FROM_EMAIL;
+if (config.email.provider === "sendgrid") {
+  sgMail.setApiKey(config.email.sendgridApiKey);
+}
 
 export const sendEmail = async (to, subject, html) => {
+  if (config.email.provider === "console") {
+    const links = extractLinks(html);
+
+    console.log("[email:console] Email delivery skipped in development.");
+    console.log(`[email:console] To: ${to}`);
+    console.log(`[email:console] Subject: ${subject}`);
+
+    if (links.length > 0) {
+      console.log("[email:console] Links:");
+      for (const link of links) {
+        console.log(`[email:console] - ${link}`);
+      }
+    }
+
+    return true;
+  }
+
   const msg = {
     to,
-    from: `TaskHub <${fromEmail}>`,
+    from: `TaskHub <${config.email.from}>`,
     subject,
     html,
   };

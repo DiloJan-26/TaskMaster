@@ -3,7 +3,7 @@
  * Handles saving and retrieving the last accessed workspace
  */
 
-const LAST_WORKSPACE_KEY = "lastAccessedWorkspaceId";
+export const LAST_WORKSPACE_KEY = "lastAccessedWorkspaceId";
 
 /**
  * Get the last accessed workspace ID from localStorage

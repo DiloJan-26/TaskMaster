@@ -6,26 +6,34 @@ import arcjet, {
   tokenBucket,
   validateEmail,
 } from "@arcjet/node";
+import { config } from "../config/env.js";
 
 const resolveArcjetMode = () => {
-  if (process.env.ARCJET_MODE) {
-    return process.env.ARCJET_MODE.toUpperCase();
+  if (config.arcjet.mode) {
+    return config.arcjet.mode.toUpperCase();
   }
 
-  const runtimeEnv =
-    process.env.NODE_ENV?.toLowerCase() ||
-    process.env.ARCJET_ENV?.toLowerCase() ||
-    "development";
+  const runtimeEnv = config.arcjet.env.toLowerCase();
 
   return runtimeEnv === "production" ? "LIVE" : "DRY_RUN";
 };
 
 const mode = resolveArcjetMode();
 
-const aj = arcjet({
+const createBypassArcjet = () => ({
+  protect: async () => ({
+    isDenied: () => false,
+    reason: "Arcjet bypassed in development because ARCJET_KEY is not set",
+  }),
+});
+
+const shouldBypassArcjet =
+  !config.arcjet.enabled || (config.isDevelopment && !config.arcjet.key);
+
+const aj = shouldBypassArcjet ? createBypassArcjet() : arcjet({
   // Get your site key from https://app.arcjet.com and set it as an environment
   // variable rather than hard coding.
-  key: process.env.ARCJET_KEY,
+  key: config.arcjet.key,
   characteristics: ["ip.src"], // Track requests by IP
   rules: [
     // Shield protects your app from common attacks e.g. SQL injection

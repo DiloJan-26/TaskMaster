@@ -16,6 +16,7 @@ import {
   Navigate,
   Outlet,
   useLoaderData,
+  useLocation,
   useNavigate,
   useSearchParams,
 } from "react-router";
@@ -34,6 +35,7 @@ const DashboardLayout = () => {
   const { workspaces = [] } = useLoaderData() as { workspaces: Workspace[] };
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
   const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(
     null,
@@ -81,6 +83,8 @@ const DashboardLayout = () => {
 
   // Show empty state if no workspaces available
   if (workspaces.length === 0) {
+    const isWorkspacesIndex = location.pathname === "/workspaces";
+
     return (
       <ThemeProvider>
         <div className="flex h-screen w-full">
@@ -91,7 +95,15 @@ const DashboardLayout = () => {
               onCreateWorkspace={() => setIsCreatingWorkspace(true)}
             />
             <main className="flex-1 overflow-y-auto h-full w-full">
-              <NoWorkspaceSelected />
+              {isWorkspacesIndex ? (
+                <div className="mx-auto container px-2 sm:px-6 lg:px-8 py-0 md:py-8 w-full h-full">
+                  <Outlet />
+                </div>
+              ) : (
+                <NoWorkspaceSelected
+                  onCreateWorkspace={() => setIsCreatingWorkspace(true)}
+                />
+              )}
             </main>
             <CreateWorkspace
               isCreatingWorkspace={isCreatingWorkspace}

@@ -24,6 +24,7 @@ import { Textarea } from "../ui/textarea";
 import { useCreateWorkspace } from "@/hooks/use-workspace";
 import { toast } from "sonner";
 import { useNavigate } from "react-router";
+import { setLastAccessedWorkspaceId } from "@/lib/workspace-storage";
 
 interface CreateWorkspaceProps {
   isCreatingWorkspace: boolean;
@@ -64,6 +65,7 @@ export const CreateWorkspace = ({
       onSuccess: (data: any) => {
         form.reset();
         setIsCreatingWorkspace(false);
+        setLastAccessedWorkspaceId(data._id);
         toast.success("Workspace created successfully");
         navigate(`/workspaces/${data._id}`);
       },

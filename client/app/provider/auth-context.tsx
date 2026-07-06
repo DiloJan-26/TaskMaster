@@ -6,6 +6,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { queryClient } from "./react-query-provider";
 import { useLocation, useNavigate } from "react-router";
 import { publicRoutes } from "@/lib";
+import { clearLastAccessedWorkspaceId } from "@/lib/workspace-storage";
 
 interface AuthContextType {
   user: User | null;
@@ -72,7 +73,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const logout = async () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    localStorage.removeItem("last-accessed-workspace");
+    clearLastAccessedWorkspaceId();
 
     setUser(null);
     setIsAuthenticated(false);

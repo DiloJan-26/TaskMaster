@@ -7,15 +7,28 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Inbox, Plus, ArrowRight } from "lucide-react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 
 interface NoWorkspaceProps {
   isLoading?: boolean;
+  onCreateWorkspace?: () => void;
 }
 
 export const NoWorkspaceSelected = ({
   isLoading = false,
+  onCreateWorkspace,
 }: NoWorkspaceProps) => {
+  const navigate = useNavigate();
+
+  const handleCreateOrViewWorkspaces = () => {
+    if (onCreateWorkspace) {
+      onCreateWorkspace();
+      return;
+    }
+
+    navigate("/workspaces");
+  };
+
   return (
     <div className="flex items-center justify-center min-h-screen w-full bg-background">
       <Card className="max-w-md w-full mx-4">
@@ -38,19 +51,18 @@ export const NoWorkspaceSelected = ({
             <p className="text-sm text-muted-foreground text-center">
               Workspaces help you organize your projects and collaborate with
               your team. Create your first workspace to get started with
-              TaskMater.
+              TaskMaster.
             </p>
 
             <div className="space-y-3 pt-2">
-              <Link to="/workspaces" className="block">
-                <Button
-                  className="w-full bg-primary hover:bg-primary/90"
-                  size="lg"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create or View Workspaces
-                </Button>
-              </Link>
+              <Button
+                className="w-full bg-primary hover:bg-primary/90"
+                size="lg"
+                onClick={handleCreateOrViewWorkspaces}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Create or View Workspaces
+              </Button>
 
               <Link to="/workspaces" className="block">
                 <Button variant="outline" className="w-full" size="lg">
